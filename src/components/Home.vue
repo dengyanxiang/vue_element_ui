@@ -84,7 +84,7 @@ export default {
       } else {
         this.menuList = res.data
       }
-      console.log(res)
+      // console.log(res)
     },
     // 按钮的点击作用：切换菜单的折叠效果
     toggleCollapse () {

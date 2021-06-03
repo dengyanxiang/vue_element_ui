@@ -1,5 +1,6 @@
 <template>
     <div>
+      <!-- 面包屑导航 -->
         <el-breadcrumb separator="/">
             <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
             <el-breadcrumb-item><a href="/">用户管理</a></el-breadcrumb-item>
@@ -35,7 +36,7 @@
                   <el-button type="primary" icon="el-icon-edit" size="mini" @click="showEditDialog(scope.row.id)"></el-button>
                   <el-button type="danger" icon="el-icon-delete" size="mini" @click="removeUserById(scope.row.id)"></el-button>
                       <el-tooltip  effect="dark" content="分配角色" placement="top" :enterable="false">
-                         <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
+                         <el-button type="warning" icon="el-icon-setting" size="mini" @click="setRoles(scope.row)"></el-button>
                       </el-tooltip>
                 </template>
               </el-table-column>
@@ -101,6 +102,33 @@
           <el-button type="primary" @click="editUserInfo">确 定</el-button>
         </span>
       </el-dialog>
+      <!-- 给用户分配权限的对话框 -->
+      <el-dialog
+        title="分配用户权限"
+        :visible.sync="setRoleDialogVisible"
+        width="50%"
+        @close="setRoleDialogClosed"
+        >
+          <div>
+            <p>当前角色名称：{{userInfo.username}}</p>
+            <p>当前角色描述：{{userInfo.role_name}}</p>
+            <p>分配新角色：
+               <el-select v-model="selectedRoleId" placeholder="请选择权限">
+                  <el-option
+                    v-for="item in roleList"
+                    :key="item.id"
+                    :label="item.roleName"
+                    :value="item.roleDesc">
+                 </el-option>
+              </el-select>
+            </p>
+          </div>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="setRoleDialogVisible = false">取 消</el-button>
+            <el-button type="primary" @click="savaRoleInfo">确 定</el-button>
+          </span>
+      </el-dialog>
+
     </div>
 </template>
 <script>
@@ -222,7 +250,14 @@ export default {
             trigger: 'blur'
           }
         ]
-      }
+      },
+      // 用户分配权限的对话框的现实与隐藏
+      setRoleDialogVisible: false,
+      // 保存用户分配角色信息的对象
+      userInfo: {},
+      roleList: [],
+      // 以选中角色权限ID的值
+      selectedRoleId: ''
     }
   },
   created () {
@@ -269,10 +304,11 @@ export default {
       // 通过ref进行调用resetFields()方法进行表单数据的清空
       this.$refs.addFormRef.resetFields()
     },
+    // 添加用户
     addUser () {
       // 进行数据的预验证
       this.$refs.addFormRef.validate(async (valid) => {
-        console.log(valid)
+        // console.log(valid)
         // 如果验证失败则返回,否则发送真正的网络请求
         if (!valid) return
         const { data: res } = await this.$http.post('users', this.addeForm)
@@ -306,7 +342,7 @@ export default {
     editUserInfo () {
       // 进行数据的预验证
       this.$refs.editFormRef.validate(async(valid) => {
-        console.log(valid)
+        // console.log(valid)
         if (!valid) return
         const { data: res } = await this.$http.put('users/' + this.editForm.id, this.editForm)
         // console.log(res)
@@ -344,6 +380,40 @@ export default {
           this.getUserList()
         }
       }
+    },
+    // 监听分配权限按钮的点击事件
+    async setRoles (userInfo) {
+      this.userInfo = userInfo
+      // 在展示对话框之前展示所有角色列表
+      const { data: res } = await this.$http.get('roles')
+      // console.log(res)
+      if (res.meta.status !== 200) {
+        return this.$message.error('获取角色列表失败')
+      } else {
+        this.roleList = res.data
+        console.log(this.roleList)
+      }
+      this.setRoleDialogVisible = true
+    },
+    async savaRoleInfo () {
+      if (!this.selectedRoleId) {
+        return this.$message.error('请选择用户权限')
+      } else {
+        const { data: res } = await this.$http.put(`users/${this.userInfo.id}/role`, { rid: this.selectedRoleId })
+        console.log(res)
+        if (res.meta.status !== 200) {
+          return this.$message.error('更新用户角色权限失败')
+        } else {
+          this.$message.success('更新用户角色权限成功')
+          this.getUserList()
+          this.setRoleDialogVisible = false
+        }
+      }
+    },
+    // 监听对话框的关闭事件后重置内部信息
+    setRoleDialogClosed () {
+      this.selectedRoleId = ''
+      this.userInfo = {}
     }
   }
 }
