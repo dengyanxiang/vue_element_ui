@@ -38,14 +38,14 @@
             </el-table>
             <!-- 分页展示 -->
             <el-pagination
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-            :current-page="queryInfo.pagenum"
-            :page-sizes="[1, 5, 7, 8]"
-            :page-size="queryInfo.pagesize"
-            layout="total, sizes, prev, pager, next, jumper"
-            :total="total" background>
-    </el-pagination>
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page="queryInfo.pagenum"
+              :page-sizes="[1, 5, 7, 8]"
+              :page-size="queryInfo.pagesize"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="total" background>
+           </el-pagination>
         </el-card>
     </div>
 </template>
